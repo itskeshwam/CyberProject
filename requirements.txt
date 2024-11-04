@@ -1,4 +1,6 @@
 joblib
-tk
 pefile
-hashlib
+tk
+pandas
+scikit-learn
+numpy
