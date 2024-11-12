@@ -1,6 +1,19 @@
-joblib
-pefile
-tk
-pandas
-scikit-learn
-numpy
+# Core Dependencies
+numpy>=1.19.2
+pandas>=1.2.4
+scikit-learn>=0.24.2
+joblib>=1.0.1
+
+# File Analysis
+pefile>=2021.5.24
+
+# GUI and Visualization
+tkinter
+matplotlib>=3.3.4
+seaborn>=0.11.1
+
+# Report Generation
+reportlab>=3.5.67
+
+# Development Tools
+pyinstaller>=4.3  # For creating executables
