@@ -19,44 +19,26 @@ class MalwareModelTrainer:
         self.feature_importance = None
 
     def load_and_prepare_data(self):
-        """Load and prepare the dataset with feature engineering"""
-        # Load data using the '|' delimiter
         data = pd.read_csv(self.data_path, sep='|', quoting=csv.QUOTE_NONE)
-        print("Available columns:", data.columns.tolist())
         
-        # Select relevant features, excluding non-numeric columns
-        feature_columns = [col for col in data.columns if col not in ['legitimate', 'Name', 'md5']]
+        # Define specific features to use
+        self.selected_features = [
+            'Machine', 'SizeOfOptionalHeader', 'Characteristics', 
+            'MajorLinkerVersion', 'MinorLinkerVersion', 'SizeOfCode',
+            'SizeOfInitializedData', 'SizeOfUninitializedData', 
+            'AddressOfEntryPoint', 'BaseOfCode', 'ImageBase',
+            'SectionsMeanEntropy', 'SectionsMinEntropy'
+        ]
         
-        # Create feature matrix X and target vector y
-        X = data[feature_columns]
+        X = data[self.selected_features]
         y = data['legitimate']
-        
-        # Handle missing values
         X = X.fillna(0)
         
-        # Scale features
         X_scaled = self.scaler.fit_transform(X)
-        X_scaled = pd.DataFrame(X_scaled, columns=feature_columns)
+        X_scaled = pd.DataFrame(X_scaled, columns=self.selected_features)
         
-        # Feature selection using Random Forest importance
-        selector = RandomForestClassifier(n_estimators=100, random_state=42)
-        selector.fit(X_scaled, y)
-        
-        # Get feature importance scores
-        importance_scores = selector.feature_importances_
-        
-        # Select features with importance above mean
-        importance_threshold = np.mean(importance_scores)
-        selected_features_mask = importance_scores > importance_threshold
-        
-        # Get selected features
-        self.selected_features = X_scaled.columns[selected_features_mask].tolist()
-        X_selected = X_scaled[self.selected_features]
-        
-        print(f"\nSelected {len(self.selected_features)} features out of {len(feature_columns)}")
-        return X_selected, y
+        return X_scaled, y
     
-    # In train_model.py, update the train_model method:
 
     def train_model(self):
         """Train the model with cross-validation and detailed feature analysis"""
