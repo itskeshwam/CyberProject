@@ -56,17 +56,19 @@ class MalwareModelTrainer:
         print(f"\nSelected {len(self.selected_features)} features out of {len(feature_columns)}")
         return X_selected, y
     
+    # In train_model.py, update the train_model method:
+
     def train_model(self):
-        """Train the model with cross-validation"""
-        print("Loading and preparing data...")
+        """Train the model with cross-validation and detailed feature analysis"""
+        print("\nLoading and preparing data...")
         X, y = self.load_and_prepare_data()
         
         # Split the data
-        print("Splitting data into train and test sets...")
+        print("\nSplitting data into train and test sets...")
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # Train Random Forest model (replacing LightGBM for better compatibility)
-        print("Training Random Forest model...")
+        # Train Random Forest model
+        print("\nTraining Random Forest model...")
         self.model = RandomForestClassifier(
             n_estimators=200,
             max_depth=10,
@@ -77,11 +79,39 @@ class MalwareModelTrainer:
         # Train the model
         self.model.fit(X_train, y_train)
         
-        # Calculate feature importance
+        # Calculate and store feature importance with more detail
         self.feature_importance = pd.DataFrame({
             'feature': self.selected_features,
             'importance': self.model.feature_importances_
         }).sort_values('importance', ascending=False)
+        
+        # Print detailed feature importance analysis
+        print("\nFeature Importance Analysis:")
+        print("---------------------------")
+        print(f"Total features selected: {len(self.selected_features)}")
+        print("\nTop features by importance:")
+        for idx, row in self.feature_importance.iterrows():
+            print(f"{row['feature']:<30} {row['importance']:.4f}")
+        
+        # Calculate cumulative importance
+        self.feature_importance['cumulative_importance'] = self.feature_importance['importance'].cumsum()
+        print("\nCumulative importance analysis:")
+        for idx, row in self.feature_importance.iterrows():
+            print(f"Top {idx + 1} features explain {row['cumulative_importance']:.1%} of total importance")
+            if row['cumulative_importance'] > 0.95:  # Stop after explaining 95% of importance
+                break
+        
+        # Save detailed feature information
+        feature_info = {
+            'selected_features': self.selected_features,
+            'importance_scores': self.feature_importance.to_dict(),
+            'feature_stats': {
+                'total_features': len(self.selected_features),
+                'importance_threshold': np.mean(self.model.feature_importances_),
+                'features_95_percent': len(self.feature_importance[self.feature_importance['cumulative_importance'] <= 0.95])
+            }
+        }
+        joblib.dump(feature_info, 'feature_info.pkl')
         
         return X_test, y_test
     
